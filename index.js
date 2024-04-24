@@ -1,6 +1,6 @@
 const express = require('express');
 const cors =require('cors')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app=express()
 const port=process.env.PORT || 5000;
@@ -24,11 +24,64 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
    const coffeCollection=client.db('coffeDb').collection('coffe')
-
+   const userCollection=client.db('coffeDb').collection('user');
+   app.get('/coffe',async(req,res)=>{
+      const cursor=coffeCollection.find();
+      const result=await  cursor.toArray();
+      res.send(result)
+   })
+   app.get('/coffe/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id: new ObjectId(id)}
+      const result=await coffeCollection.findOne(query);
+      res.send(result)
+   })
     app.post('/coffe',async(req,res)=>{
       const newCoffe=req.body;
       console.log(newCoffe);
       const result=await coffeCollection.insertOne(newCoffe);
+      res.send(result)
+    })
+    app.put('/coffe/:id',async(req,res)=>{
+      const id=req.params.id;
+      const filter={_id: new ObjectId(id)}
+      const options={upsert:true};
+      const uddatedCoffe=req.body;
+      // const Coffe={
+      //    ${
+      //       name:uddatedCoffe.name,
+      //       quantity:uddatedCoffe.quantity,supplier:uddatedCoffe.supplier,
+      //       test:uddatedCoffe.test,
+      //       category:uddatedCoffe.category,
+      //       details:uddatedCoffe.details,
+      //       photo:uddatedCoffe.photo
+      //    }
+      // }
+      const result=await coffeCollection.updateOne(filter,Coffe,options);
+      res.send(result)
+    })
+    app.delete('/coffe/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id: new ObjectId(id)}
+      const result=await coffeCollection.deleteOne(query);
+      res.send(result)
+    })
+    app.get('/user',async(req,res)=>{
+      const cursor=userCollection.find();
+      const users=await cursor.toArray()
+      res.send(users)
+    })
+    app.post('/user',async(req,res)=>{
+      const user=req.body;
+      console.log(user)
+      const result=await userCollection.insertOne(user);
+      console.log(result);
+      res.send(result)
+    })
+    app.delete('/user/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id:new ObjectId(id)};
+      const result=await userCollection.deleteOne(query);
       res.send(result)
     })
     // Send a ping to confirm a successful connection
